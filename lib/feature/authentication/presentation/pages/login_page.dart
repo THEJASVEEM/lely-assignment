@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lely_assignment/core/di/injection.dart';
+import 'package:lely_assignment/feature/activity/presentation/cubit/activity_cubit.dart';
+import 'package:lely_assignment/feature/activity/presentation/pages/activity_page.dart';
 import 'package:lely_assignment/feature/authentication/presentation/cubit/authentication_cubit.dart';
 import 'package:lely_assignment/feature/authentication/presentation/widgets/login_button.dart';
 import 'package:lely_assignment/feature/authentication/presentation/widgets/password_textfield.dart';
@@ -39,7 +42,14 @@ class _LoginPageState extends State<LoginPage> {
         child: BlocConsumer<AuthenticationCubit, AuthenticationState>(
           listener: (context, state) {
             if (state is AuthenticationSuccess) {
-              debugPrint('Login successful');
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute<void>(
+                  builder: (_) => BlocProvider(
+                    create: (_) => getIt<ActivityCubit>()..loadActivities(),
+                    child: const ActivityPage(),
+                  ),
+                ),
+              );
             }
           },
           builder: (context, state) {

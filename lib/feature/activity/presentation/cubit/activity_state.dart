@@ -26,7 +26,7 @@ final class ActivityLoaded extends ActivityState {
 }
 
 final class ActivityFailure extends ActivityState {
-  const ActivityFailure({this.message});
+  const ActivityFailure({required this.message});
 
-  final String? message;
+  final String message;
 }

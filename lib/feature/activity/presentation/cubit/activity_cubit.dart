@@ -44,6 +44,25 @@ class ActivityCubit extends Cubit<ActivityState> {
     }
   }
 
+  void selectRange(ActivityRange range) {
+    final currentState = state;
+
+    if (currentState is! ActivityLoaded) {
+      return;
+    }
+
+    emit(
+      ActivityLoaded(
+        activities: currentState.activities,
+        filteredActivities: _filterActivities(
+          activities: currentState.activities,
+          range: range,
+        ),
+        selectedRange: range,
+      ),
+    );
+  }
+
   List<RobotActivity> _filterActivities({
     required List<RobotActivity> activities,
     required ActivityRange range,
