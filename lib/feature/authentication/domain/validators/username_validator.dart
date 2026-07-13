@@ -1,5 +1,7 @@
+import 'package:injectable/injectable.dart';
 import 'package:lely_assignment/feature/authentication/domain/validators/validation_result.dart';
 
+@lazySingleton
 class UsernameValidator {
   const UsernameValidator();
 

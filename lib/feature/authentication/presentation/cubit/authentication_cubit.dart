@@ -20,29 +20,30 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
     required String username,
     required String password,
   }) async {
-    final result = _usernameValidator.validate(username);
+    final usernameResult = _usernameValidator.validate(username);
 
-    if (password.isEmpty) {
-      emit(const AuthenticationFailure('Password is required.'));
+    final usernameError = switch (usernameResult) {
+      EmptyUsername() => 'Username is required.',
+      UnsupportedUsernameCharacters() =>
+        'Username can only contain letters and numbers.',
+      ValidUsername() => null,
+    };
+
+    final passwordError = password.isEmpty ? 'Password is required.' : null;
+
+    if (usernameError != null || passwordError != null) {
+      emit(
+        AuthenticationFailure(
+          usernameError: usernameError,
+          passwordError: passwordError,
+        ),
+      );
       return;
     }
 
-    switch (result) {
-      case EmptyUsername():
-        emit(const AuthenticationFailure('Username is required.'));
-        return;
+    final validUsername = usernameResult as ValidUsername;
 
-      case UnsupportedUsernameCharacters():
-        emit(
-          const AuthenticationFailure(
-            'Username can only contain letters and numbers.',
-          ),
-        );
-        return;
-
-      case ValidUsername(:final value):
-        await _authenticate(username: value, password: password);
-    }
+    await _authenticate(username: validUsername.value, password: password);
   }
 
   Future<void> _authenticate({
@@ -52,17 +53,31 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
     emit(const AuthenticationLoading());
 
     final isAuthenticated = await _authenticationRepository.authenticate(
-      LoginCredentials(username: username.trim(), password: password),
+      LoginCredentials(username: username, password: password),
     );
 
     if (isAuthenticated) {
       emit(const AuthenticationSuccess());
-    } else {
-      emit(const AuthenticationFailure('Invalid username or password.'));
+      return;
     }
+
+    emit(
+      const AuthenticationFailure(
+        passwordError: 'Invalid username or password.',
+      ),
+    );
   }
 
-  void reset() {
-    emit(const AuthenticationInitial());
+  void usernameChanged(String username) {
+    final result = _usernameValidator.validate(username);
+
+    final error = switch (result) {
+      EmptyUsername() => null,
+      UnsupportedUsernameCharacters() =>
+        'Username can only contain letters and numbers.',
+      ValidUsername() => null,
+    };
+
+    emit(AuthenticationFailure(usernameError: error));
   }
 }

@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lely_assignment/core/di/injection.dart';
+import 'package:lely_assignment/feature/authentication/presentation/cubit/authentication_cubit.dart';
+import 'package:lely_assignment/feature/authentication/presentation/pages/login_page.dart';
 
 class LelyAssignmentApp extends StatelessWidget {
   const LelyAssignmentApp({super.key});
@@ -12,13 +16,9 @@ class LelyAssignmentApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
         useMaterial3: true,
       ),
-      home: const Scaffold(
-        body: Center(
-          child: Text(
-            'Lely Assignment',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
-          ),
-        ),
+      home: BlocProvider(
+        create: (_) => getIt<AuthenticationCubit>(),
+        child: LoginPage(),
       ),
     );
   }

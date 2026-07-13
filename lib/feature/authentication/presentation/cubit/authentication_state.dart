@@ -18,7 +18,8 @@ final class AuthenticationSuccess extends AuthenticationState {
 }
 
 final class AuthenticationFailure extends AuthenticationState {
-  const AuthenticationFailure(this.message);
+  const AuthenticationFailure({this.usernameError, this.passwordError});
 
-  final String message;
+  final String? usernameError;
+  final String? passwordError;
 }
