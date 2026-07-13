@@ -15,6 +15,7 @@ class UsernameTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      key: const Key('username_field'),
       controller: controller,
       onChanged: onChanged,
       textInputAction: TextInputAction.next,

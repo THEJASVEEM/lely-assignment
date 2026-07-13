@@ -22,6 +22,7 @@ class _PasswordTextFieldState extends State<PasswordTextField> {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      key: const Key('password_field'),
       controller: widget.controller,
       obscureText: _obscureText,
       textInputAction: TextInputAction.done,

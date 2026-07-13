@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lely_assignment/feature/authentication/presentation/cubit/authentication_cubit.dart';
 import 'package:lely_assignment/feature/authentication/presentation/widgets/login_button.dart';
@@ -94,7 +93,11 @@ class _LoginPageState extends State<LoginPage> {
                         onSubmitted: _login,
                       ),
                       const SizedBox(height: 24),
-                      LoginButton(isLoading: isLoading, onPressed: _login),
+                      LoginButton(
+                        key: const Key('login_button'),
+                        isLoading: isLoading,
+                        onPressed: _login,
+                      ),
                     ],
                   ),
                 ),
