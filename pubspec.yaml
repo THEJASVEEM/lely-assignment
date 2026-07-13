@@ -37,6 +37,7 @@ dependencies:
   flutter_bloc: ^9.1.1
   get_it: ^9.2.1
   injectable: ^3.0.0
+  intl: ^0.20.3
 
 dev_dependencies:
   flutter_test:
