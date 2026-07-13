@@ -96,16 +96,6 @@ class ActivityCubit extends Cubit<ActivityState> {
         endDate.month - 3,
         endDate.day,
       ),
-      ActivityRange.sixMonths => DateTime(
-        endDate.year,
-        endDate.month - 6,
-        endDate.day,
-      ),
-      ActivityRange.oneYear => DateTime(
-        endDate.year - 1,
-        endDate.month,
-        endDate.day,
-      ),
     };
   }
 }

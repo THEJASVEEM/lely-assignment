@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lely_assignment/feature/activity/presentation/cubit/activity_cubit.dart';
+import 'package:lely_assignment/feature/activity/presentation/widgets/activity_line_chart.dart';
 import 'package:lely_assignment/feature/activity/presentation/widgets/activity_range_selector.dart';
 
 class ActivityContent extends StatelessWidget {
@@ -36,12 +37,12 @@ class ActivityContent extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Text(
-                state.filteredActivities.isEmpty
-                    ? 'No activity available for this range'
-                    : 'Custom chart will be added here',
-                textAlign: TextAlign.center,
-              ),
+              child: state.filteredActivities.isEmpty
+                  ? Text(
+                      'No activity available for this range',
+                      textAlign: TextAlign.center,
+                    )
+                  : ActivityLineChart(activities: state.filteredActivities),
             ),
           ],
         ),
