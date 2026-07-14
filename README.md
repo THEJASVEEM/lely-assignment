@@ -1,17 +1,39 @@
 # lely_assignment
 
-A new Flutter project.
+A flutter mobile application created for the Lely assignment
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter application.
+- Login using predefined credentials
+- View robot activities as in hours active per day
+- Filter the display
+- Add new activities maintained in local memory
+- Minutes converted to hours
+- Custom `CustomPainter` line chart with gradient and tooltip
+- Date filters: 1W, 1M, 3M
+- Add activity using a modal bottom sheet
+- Duplicate-date validation
+- Temporary in-memory persistence
+- Unit and widget tests
 
-A few resources to get you started if this is your first Flutter project:
+## Login
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```text
+Username: Lely
+Password: LelyControl2
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Run
+
+```text
+flutter pub get
+dart run build_runner build --delete-conflicting-outputs
+flutter run
+```
+
+## Tests
+
+```text
+flutter test
+flutter analyze
+```
