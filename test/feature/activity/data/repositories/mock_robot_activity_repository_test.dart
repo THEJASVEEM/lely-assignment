@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lely_assignment/feature/activity/data/models/robot_activity_dto.dart';
 import 'package:lely_assignment/feature/activity/data/repositories/mock_robot_activity_repository.dart';
+import 'package:lely_assignment/feature/activity/domain/entities/add_activity_result.dart';
 import 'package:lely_assignment/feature/activity/domain/entities/robot_activity.dart';
 
 import '../fake_robot_activity_local_datasource.dart';
@@ -60,6 +61,27 @@ void main() {
       expect(firstResult, hasLength(4));
       expect(secondResult, hasLength(4));
       expect(dataSource.loadCallCount, 1);
+    });
+    test('rejects a duplicate activity date', () async {
+      final result = await repository.addActivity(
+        RobotActivity(date: DateTime(2025, 10, 8), durationMinutes: 300),
+      );
+
+      expect(result, isA<DuplicateActivityDate>());
+
+      final activities = await repository.getActivities();
+      expect(activities, hasLength(3));
+    });
+
+    test('normalizes the date before duplicate comparison', () async {
+      final result = await repository.addActivity(
+        RobotActivity(
+          date: DateTime(2025, 10, 8, 18, 30),
+          durationMinutes: 300,
+        ),
+      );
+
+      expect(result, isA<DuplicateActivityDate>());
     });
   });
 }
