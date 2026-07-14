@@ -1,6 +1,7 @@
 import 'package:injectable/injectable.dart';
 import 'package:lely_assignment/feature/activity/data/datasources/robot_activity_local_datasource.dart';
 import 'package:lely_assignment/feature/activity/data/mappers/robot_activity_mapper.dart';
+import 'package:lely_assignment/feature/activity/domain/entities/add_activity_result.dart';
 import 'package:lely_assignment/feature/activity/domain/entities/robot_activity.dart';
 import 'package:lely_assignment/feature/activity/domain/repositories/robot_activity_repository.dart';
 
@@ -25,10 +26,30 @@ class MockRobotActivityRepository implements RobotActivityRepository {
   }
 
   @override
-  Future<void> addActivity(RobotActivity activity) async {
+  Future<AddActivityResult> addActivity(RobotActivity activity) async {
     final activities = await getActivities();
+    final normalizedDate = _dateOnly(activity.date);
 
-    _cachedActivities = [...activities, activity]
-      ..sort((a, b) => a.date.compareTo(b.date));
+    final isDuplicate = activities.any(
+      (existingActivity) => _dateOnly(existingActivity.date) == normalizedDate,
+    );
+
+    if (isDuplicate) {
+      return DuplicateActivityDate(normalizedDate);
+    }
+
+    _cachedActivities = [
+      ...activities,
+      RobotActivity(
+        date: normalizedDate,
+        durationMinutes: activity.durationMinutes,
+      ),
+    ]..sort((first, second) => first.date.compareTo(second.date));
+
+    return AddActivitySuccess(List.unmodifiable(_cachedActivities!));
+  }
+
+  DateTime _dateOnly(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
   }
 }

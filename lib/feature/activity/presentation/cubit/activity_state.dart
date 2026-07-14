@@ -18,11 +18,34 @@ final class ActivityLoaded extends ActivityState {
     required this.activities,
     required this.filteredActivities,
     required this.selectedRange,
+    this.isSubmitting = false,
+    this.addActivityError,
   });
 
   final List<RobotActivity> activities;
   final List<RobotActivity> filteredActivities;
   final ActivityRange selectedRange;
+  final bool isSubmitting;
+  final String? addActivityError;
+
+  ActivityLoaded copyWith({
+    List<RobotActivity>? activities,
+    List<RobotActivity>? filteredActivities,
+    ActivityRange? selectedRange,
+    bool? isSubmitting,
+    String? addActivityError,
+    bool clearAddActivityError = false,
+  }) {
+    return ActivityLoaded(
+      activities: activities ?? this.activities,
+      filteredActivities: filteredActivities ?? this.filteredActivities,
+      selectedRange: selectedRange ?? this.selectedRange,
+      isSubmitting: isSubmitting ?? this.isSubmitting,
+      addActivityError: clearAddActivityError
+          ? null
+          : addActivityError ?? this.addActivityError,
+    );
+  }
 }
 
 final class ActivityFailure extends ActivityState {
