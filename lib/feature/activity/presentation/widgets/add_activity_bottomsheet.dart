@@ -12,30 +12,50 @@ class AddActivityBottomSheet extends StatefulWidget {
 }
 
 class _AddActivityBottomSheetState extends State<AddActivityBottomSheet> {
-  final _formKey = GlobalKey<FormState>();
-  final _durationController = TextEditingController();
+  static const int _maxMinutes = 1440;
 
-  DateTime _selectedDate = DateTime.now();
-  bool _wasSubmitting = false;
+  final _formKey = GlobalKey<FormState>();
+  final _dateFieldKey = GlobalKey<FormFieldState<DateTime>>();
+  final _minutesController = TextEditingController();
 
   @override
   void dispose() {
-    _durationController.dispose();
+    _minutesController.dispose();
     super.dispose();
   }
 
-  Future<void> _pickDate(BuildContext context) async {
+  DateTime _initialPickerDate() {
+    final state = context.read<ActivityCubit>().state;
+    final now = DateTime.now();
+
+    if (state is ActivityLoaded && state.activities.isNotEmpty) {
+      final latestDate = state.activities
+          .map((activity) => activity.date)
+          .reduce((a, b) => a.isAfter(b) ? a : b);
+
+      final dayAfterLatest = latestDate.add(const Duration(days: 1));
+
+      return dayAfterLatest.isAfter(now) ? now : dayAfterLatest;
+    }
+
+    return now;
+  }
+
+  Future<void> _pickDate(
+    BuildContext context,
+    FormFieldState<DateTime> field,
+  ) async {
     final now = DateTime.now();
 
     final pickedDate = await showDatePicker(
       context: context,
-      initialDate: _selectedDate,
+      initialDate: field.value ?? _initialPickerDate(),
       firstDate: DateTime(now.year - 5),
       lastDate: now,
     );
 
     if (pickedDate != null) {
-      setState(() => _selectedDate = pickedDate);
+      field.didChange(pickedDate);
     }
   }
 
@@ -44,17 +64,27 @@ class _AddActivityBottomSheetState extends State<AddActivityBottomSheet> {
       return;
     }
 
+    final date = _dateFieldKey.currentState!.value!;
+
     context.read<ActivityCubit>().addActivity(
-      date: _selectedDate,
-      durationMinutes: int.parse(_durationController.text),
+      date: date,
+      durationMinutes: int.parse(_minutesController.text),
     );
   }
 
-  String? _validateDuration(String? value) {
-    final minutes = int.tryParse(value ?? '');
+  String? _validateMinutes(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Minutes active is required.';
+    }
 
-    if (minutes == null || minutes <= 0) {
-      return 'Enter a duration greater than 0.';
+    final minutes = int.parse(value);
+
+    if (minutes <= 0) {
+      return 'Minutes must be greater than zero.';
+    }
+
+    if (minutes > _maxMinutes) {
+      return 'Minutes cannot exceed $_maxMinutes per day.';
     }
 
     return null;
@@ -63,22 +93,16 @@ class _AddActivityBottomSheetState extends State<AddActivityBottomSheet> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<ActivityCubit, ActivityState>(
-      listenWhen: (previous, current) =>
-          previous is ActivityLoaded && current is ActivityLoaded,
-      listener: (context, state) {
-        final loadedState = state as ActivityLoaded;
-
-        final didSucceed =
-            _wasSubmitting &&
-            !loadedState.isSubmitting &&
-            loadedState.addActivityError == null;
-
-        _wasSubmitting = loadedState.isSubmitting;
-
-        if (didSucceed) {
-          Navigator.of(context).pop();
+      listenWhen: (previous, current) {
+        if (previous is! ActivityLoaded || current is! ActivityLoaded) {
+          return false;
         }
+
+        return previous.isSubmitting &&
+            !current.isSubmitting &&
+            current.addActivityError == null;
       },
+      listener: (context, state) => Navigator.of(context).pop(),
       child: Padding(
         padding: EdgeInsets.only(
           left: 20,
@@ -103,29 +127,46 @@ class _AddActivityBottomSheetState extends State<AddActivityBottomSheet> {
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 20),
-                  InkWell(
-                    key: const Key('add_activity_date_field'),
-                    onTap: isSubmitting ? null : () => _pickDate(context),
-                    child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'Date',
-                        border: OutlineInputBorder(),
-                      ),
-                      child: Text(DateFormat.yMMMd().format(_selectedDate)),
-                    ),
+                  FormField<DateTime>(
+                    key: _dateFieldKey,
+                    validator: (value) =>
+                        value == null ? 'Date is required.' : null,
+                    builder: (field) {
+                      return InkWell(
+                        key: const Key('add_activity_date_field'),
+                        onTap: isSubmitting
+                            ? null
+                            : () => _pickDate(context, field),
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: 'Date',
+                            border: const OutlineInputBorder(),
+                            errorText: field.errorText,
+                          ),
+                          child: Text(
+                            field.value == null
+                                ? 'Select a date'
+                                : DateFormat.yMMMd().format(field.value!),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     key: const Key('add_activity_duration_field'),
-                    controller: _durationController,
+                    controller: _minutesController,
                     enabled: !isSubmitting,
                     keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(4),
+                    ],
                     decoration: const InputDecoration(
-                      labelText: 'Duration (minutes)',
+                      labelText: 'Minutes active',
                       border: OutlineInputBorder(),
                     ),
-                    validator: _validateDuration,
+                    validator: _validateMinutes,
                   ),
                   if (error != null) ...[
                     const SizedBox(height: 12),
@@ -138,16 +179,36 @@ class _AddActivityBottomSheetState extends State<AddActivityBottomSheet> {
                     ),
                   ],
                   const SizedBox(height: 20),
-                  FilledButton(
-                    key: const Key('add_activity_submit_button'),
-                    onPressed: isSubmitting ? null : () => _submit(context),
-                    child: isSubmitting
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Save'),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          key: const Key('add_activity_cancel_button'),
+                          onPressed: isSubmitting
+                              ? null
+                              : () => Navigator.of(context).pop(),
+                          child: const Text('Cancel'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton(
+                          key: const Key('add_activity_submit_button'),
+                          onPressed: isSubmitting
+                              ? null
+                              : () => _submit(context),
+                          child: isSubmitting
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text('Save'),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
